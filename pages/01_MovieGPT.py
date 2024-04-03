@@ -26,15 +26,6 @@ class ChatCallbackHandler(BaseCallbackHandler):
         self.message_box.markdown(self.message)
 
 
-llm = ChatOpenAI(
-    temperature=0.1,
-    streaming=True,
-    callbacks=[
-        ChatCallbackHandler(),
-    ],
-)
-
-
 def save_message(message, role):
     st.session_state["movie-emoji-messages"].append(
         {
@@ -58,18 +49,6 @@ def paint_history():
             message["role"],
             save=False,
         )
-
-
-memory = ConversationBufferMemory(
-    llm=llm,
-    max_token_limit=600,
-    memory_key="rag_chat_history",
-    return_messages=True,
-)
-
-
-def load_memory(_):
-    return memory.load_memory_variables({})["rag_chat_history"]
 
 
 examples = [
@@ -148,24 +127,56 @@ st.markdown(
 if "movie-emoji-messages" not in st.session_state.keys():
     st.session_state["movie-emoji-messages"] = []
 
+with st.sidebar:
+    api_key = st.text_input("Put Your OpenAI API KEY")
 
-send_message(
-    "I'm ready! Ask away!",
-    "ai",
-    save=False,
-)
-paint_history()
-message = st.chat_input("Ask anything about your file")
-if message:
-    send_message(message, "human")
-    chain = (
-        {
-            "question": RunnablePassthrough(),
-            "rag_chat_history": RunnableLambda(load_memory),
-        }
-        | prompt
-        | llm
+    st.info("This page operates based on the below Github repository.")
+    st.link_button(
+        label="Github", url="https://github.com/pjh5474/python_gpt/tree/streamlit"
     )
-    with st.chat_message("ai"):
-        response = chain.invoke(message)
-        memory.save_context({"input": message}, {"output": response.content})
+
+if api_key:
+    llm = ChatOpenAI(
+        temperature=0.1,
+        streaming=True,
+        callbacks=[
+            ChatCallbackHandler(),
+        ],
+        api_key=api_key,
+    )
+
+    memory = ConversationBufferMemory(
+        llm=llm,
+        max_token_limit=600,
+        memory_key="rag_chat_history",
+        return_messages=True,
+    )
+
+
+def load_memory(_):
+    return memory.load_memory_variables({})["rag_chat_history"]
+
+
+if api_key:
+    send_message(
+        "I'm ready! Ask away!",
+        "ai",
+        save=False,
+    )
+    paint_history()
+    message = st.chat_input("Ask anything about your file")
+    if message:
+        send_message(message, "human")
+        chain = (
+            {
+                "question": RunnablePassthrough(),
+                "rag_chat_history": RunnableLambda(load_memory),
+            }
+            | prompt
+            | llm
+        )
+        with st.chat_message("ai"):
+            response = chain.invoke(message)
+            memory.save_context({"input": message}, {"output": response.content})
+else:
+    st.info("Please input your OpenAI KEY")

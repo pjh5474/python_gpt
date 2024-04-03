@@ -31,15 +31,6 @@ class ChatCallbackHandler(BaseCallbackHandler):
         self.message_box.markdown(self.message)
 
 
-llm = ChatOpenAI(
-    temperature=0.1,
-    streaming=True,
-    callbacks=[
-        ChatCallbackHandler(),
-    ],
-)
-
-
 @st.cache_data(show_spinner="Embedding file...")
 def embed_file(file):
     if Path(f"index/{file.name}").exists():
@@ -99,18 +90,6 @@ def format_docs(docs):
     return "\n\n".join(document.page_content for document in docs)
 
 
-memory = ConversationBufferMemory(
-    llm=llm,
-    max_token_limit=600,
-    memory_key="rag_chat_history",
-    return_messages=True,
-)
-
-
-def load_memory(_):
-    return memory.load_memory_variables({})["rag_chat_history"]
-
-
 prompt = ChatPromptTemplate.from_messages(
     [
         (
@@ -137,35 +116,68 @@ st.markdown(
     """
 )
 
+
 with st.sidebar:
     file = st.file_uploader(
         "Upload a file",
         type=["pdf", "txt", "docx", "xlsx"],
     )
 
-if file:
-    retriever = embed_file(file)
-    send_message(
-        "I'm ready! Ask away!",
-        "ai",
-        save=False,
+    api_key = st.text_input("Put Your OpenAI API KEY")
+
+    st.info("This page operates based on the below Github repository.")
+    st.link_button(
+        label="Github", url="https://github.com/pjh5474/python_gpt/tree/streamlit"
     )
-    paint_history()
-    message = st.chat_input("Ask anything about your file")
-    if message:
-        send_message(message, "human")
-        chain = (
-            {
-                "context": retriever | RunnableLambda(format_docs),
-                "question": RunnablePassthrough(),
-                "rag_chat_history": RunnableLambda(load_memory),
-            }
-            | prompt
-            | llm
+
+if api_key:
+    llm = ChatOpenAI(
+        temperature=0.1,
+        streaming=True,
+        callbacks=[
+            ChatCallbackHandler(),
+        ],
+        api_key=api_key,
+    )
+
+    memory = ConversationBufferMemory(
+        llm=llm,
+        max_token_limit=600,
+        memory_key="rag_chat_history",
+        return_messages=True,
+    )
+
+
+def load_memory(_):
+    return memory.load_memory_variables({})["rag_chat_history"]
+
+
+if file:
+    if api_key:
+        retriever = embed_file(file)
+        send_message(
+            "I'm ready! Ask away!",
+            "ai",
+            save=False,
         )
-        with st.chat_message("ai"):
-            response = chain.invoke(message)
-            memory.save_context({"input": message}, {"output": response.content})
+        paint_history()
+        message = st.chat_input("Ask anything about your file")
+        if message:
+            send_message(message, "human")
+            chain = (
+                {
+                    "context": retriever | RunnableLambda(format_docs),
+                    "question": RunnablePassthrough(),
+                    "rag_chat_history": RunnableLambda(load_memory),
+                }
+                | prompt
+                | llm
+            )
+            with st.chat_message("ai"):
+                response = chain.invoke(message)
+                memory.save_context({"input": message}, {"output": response.content})
+    else:
+        st.info("Please input your OpenAI KEY")
 
 else:
     st.session_state["messages"] = []
