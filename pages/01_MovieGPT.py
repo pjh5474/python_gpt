@@ -148,6 +148,12 @@ st.markdown(
 if "movie-emoji-messages" not in st.session_state.keys():
     st.session_state["movie-emoji-messages"] = []
 
+<<<<<<< Updated upstream
+=======
+with st.sidebar:
+    
+    api_key = st.text_input("Put Your OpenAI API KEY")
+>>>>>>> Stashed changes
 
 send_message(
     "I'm ready! Ask away!",
