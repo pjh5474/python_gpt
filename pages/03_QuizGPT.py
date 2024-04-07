@@ -122,6 +122,7 @@ context: {context}
 )
 
 difficulty = "easy"
+topic = None
 
 with st.sidebar:
     api_key = None
