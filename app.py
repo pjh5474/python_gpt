@@ -10,5 +10,6 @@ st.markdown(
 - [o] [Movie to Icons](/MovieGPT)
 - [o] [DocumentGPT](/DocumentGPT)
 - [o] [QuizGPT](/QuizGPT)
+
 """
 )
