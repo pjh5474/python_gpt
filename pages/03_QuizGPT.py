@@ -6,16 +6,45 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.callbacks import StreamingStdOutCallbackHandler
-from langchain.schema import BaseOutputParser
 
+quiz_function = {
+    "name": "create_quiz",
+    "description": "function that takes a list of questions and answers and returns a quiz",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "questions": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "question": {
+                            "type": "string",
+                        },
+                        "answers": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "answer": {
+                                        "type": "string",
+                                    },
+                                    "correct": {
+                                        "type": "boolean",
+                                    },
+                                },
+                                "required": ["answer", "correct"],
+                            },
+                        },
+                    },
+                    "required": ["question", "answers"],
+                },
+            }
+        },
+        "required": ["questions"],
+    },
+}
 
-class JsonOutputParser(BaseOutputParser):
-    def parse(self, text):
-        text = text.replace("```", "").replace("json", "")
-        return json.loads(text)
-
-
-output_parser = JsonOutputParser()
 
 st.set_page_config(
     page_title="Quiz GPT",
@@ -43,7 +72,7 @@ def split_file(file):
 
 @st.cache_data(show_spinner="Searching Wikipedia...")
 def search_wikipedia(topic):
-    retriever = WikipediaRetriever(top_k_results=2, lang=language)
+    retriever = WikipediaRetriever(top_k_results=2)
     docs = retriever.get_relevant_documents(topic)
     return docs
 
@@ -59,11 +88,14 @@ questions_prompt = ChatPromptTemplate.from_messages(
             """
 You are a helpful assistant that is role playing as a teacher.
 
-Based ONLY on the following context make 10 questions to test the user's knowledge about the text.
+Based ONLY on the following context make minimum 3 to maximum 10 'DIFFERENT' questions to test the user's knowledge about the text. 
 
 Each question should have 4 answers, three of them must be incorrect and on should be correct.
 
 Use (o) to signal the correct answer.
+
+There are three levels of difficulty for the quiz: easy, normal difficult.
+When you make a quiz, you have to make it at this difficulty level : {difficulty}.
 
 Question examples:
 
@@ -87,127 +119,7 @@ context: {context}
     ]
 )
 
-formatting_prompt = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            """
-    You are a powerful formatting algorithm.
-     
-    You format exam questions into JSON format.
-    Answers with (o) are the correct ones.
-     
-    Example Input:
-    Question: What is the color of the ocean?
-    Answers: Red | Yellow | Green | Blue(o)
-         
-    Question: What is the capital or Georgia?
-    Answers: Baku | Tbilisi(o) | Manila | Beirut
-         
-    Question: When was Avatar released?
-    Answers: 2007 | 2001 | 2009(o) | 1998
-         
-    Question: Who was Julius Caesar?
-    Answers: A Roman Emperor(o) | Painter | Actor | Model
-    
-     
-    Example Output:
-     
-    ```json
-    {{ "questions": [
-            {{
-                "question": "What is the color of the ocean?",
-                "answers": [
-                        {{
-                            "answer": "Red",
-                            "correct": false
-                        }},
-                        {{
-                            "answer": "Yellow",
-                            "correct": false
-                        }},
-                        {{
-                            "answer": "Green",
-                            "correct": false
-                        }},
-                        {{
-                            "answer": "Blue",
-                            "correct": true
-                        }},
-                ]
-            }},
-                        {{
-                "question": "What is the capital or Georgia?",
-                "answers": [
-                        {{
-                            "answer": "Baku",
-                            "correct": false
-                        }},
-                        {{
-                            "answer": "Tbilisi",
-                            "correct": true
-                        }},
-                        {{
-                            "answer": "Manila",
-                            "correct": false
-                        }},
-                        {{
-                            "answer": "Beirut",
-                            "correct": false
-                        }},
-                ]
-            }},
-                        {{
-                "question": "When was Avatar released?",
-                "answers": [
-                        {{
-                            "answer": "2007",
-                            "correct": false
-                        }},
-                        {{
-                            "answer": "2001",
-                            "correct": false
-                        }},
-                        {{
-                            "answer": "2009",
-                            "correct": true
-                        }},
-                        {{
-                            "answer": "1998",
-                            "correct": false
-                        }},
-                ]
-            }},
-            {{
-                "question": "Who was Julius Caesar?",
-                "answers": [
-                        {{
-                            "answer": "A Roman Emperor",
-                            "correct": true
-                        }},
-                        {{
-                            "answer": "Painter",
-                            "correct": false
-                        }},
-                        {{
-                            "answer": "Actor",
-                            "correct": false
-                        }},
-                        {{
-                            "answer": "Model",
-                            "correct": false
-                        }},
-                ]
-            }}
-        ]
-     }}
-    ```
-    Your turn!
-    Questions: {context}
-""",
-        )
-    ]
-)
+difficulty = "easy"
 
 with st.sidebar:
     api_key = None
@@ -228,16 +140,17 @@ with st.sidebar:
         if file:
             docs = split_file(file)
     else:
-        language = st.selectbox(
-            "Select Wikipedia Language",
-            [
-                "en",
-                "ko",
-            ],
-        )
         topic = st.text_input("Search Wikipedia...")
         if topic:
             docs = search_wikipedia(topic)
+
+    difficulty = st.selectbox(
+        "Select Quiz Difficulty",
+        [
+            "easy",
+            "hard",
+        ],
+    )
 
     st.info("This page operates based on the below Github repository.")
     st.link_button(
@@ -252,48 +165,34 @@ if api_key:
             StreamingStdOutCallbackHandler(),
         ],
         api_key=api_key,
+    ).bind(
+        function_call={
+            "name": "create_quiz",
+        },
+        functions=[
+            quiz_function,
+        ],
     )
 
-questions_chain = {"context": format_docs} | questions_prompt | llm
-formatting_chain = formatting_prompt | llm
-
-final_chain = {"context": questions_chain} | formatting_chain | output_parser
+    quiz_chain = questions_prompt | llm
 
 
 @st.cache_data(show_spinner="Making quiz...")
-def run_quiz_chain(_docs, topic):
-    return final_chain.invoke(_docs)
+def run_quiz_chain(_docs, topic, difficulty):
+    docs = format_docs(_docs)
+    response = quiz_chain.invoke(
+        {
+            "context": docs,
+            "difficulty": difficulty,
+        }
+    )
+    response = response.additional_kwargs["function_call"]["arguments"]
+
+    return json.loads(response)
 
 
-def make_quiz_form(response, score, is_submitted):
-    with st.form("questions_form"):
-        for question in response["questions"]:
-            st.write(question["question"])
-            value = st.radio(
-                "Select an option.",
-                [answer["answer"] for answer in question["answers"]],
-                index=None,
-            )
-            if {"answer": value, "correct": True} in question["answers"]:
-                st.success("Correct!")
-                score += 1
-                is_submitted = True
-            elif value is not None:
-                st.error("Wrong!")
-                is_submitted = True
-
-        st.form_submit_button()
-        if is_submitted:
-            st.write(f"Your score : {score} / {len(response['questions'])}")
-
-
-def retry_quiz(response):
-    retry = st.button("Retry Quiz")
-    if retry:
-        score = 0
-        is_submitted = False
-        make_quiz_form(response, score, is_submitted)
-
+score = 0
+is_submitted = False
 
 if not docs:
     st.markdown(
@@ -309,13 +208,34 @@ else:
     if not api_key:
         st.info("Please input your OpenAI KEY")
     else:
-        response = run_quiz_chain(docs, topic if topic else file.name)
-        score = 0
-        is_submitted = False
-        make_quiz_form(response, score, is_submitted)
+        response = run_quiz_chain(docs, topic if topic else file.name, difficulty)
+        quiz_form = st.form(
+            "questions_form",
+            clear_on_submit=True if st.session_state["clear"] else False,
+        )
+        for question in response["questions"]:
+            quiz_form.write(question["question"])
+            value = quiz_form.radio(
+                "Select a correct answer.",
+                [answer["answer"] for answer in question["answers"]],
+                index=None,
+            )
+            if {"answer": value, "correct": True} in question["answers"]:
+                quiz_form.success("Correct!")
+                score += 1
+                is_submitted = True
+            elif value is not None:
+                quiz_form.error("Wrong!")
+                is_submitted = True
 
         if is_submitted and score != len(response["questions"]):
-            retry_quiz()
+            st.session_state["clear"] = True
+            quiz_form.form_submit_button("Retry")
+        else:
+            quiz_form.form_submit_button("Submit")
+        if is_submitted:
+            quiz_form.write(f"Your score : {score} / {len(response['questions'])}")
 
-        elif is_submitted and score == len(response["questions"]):
-            st.balloons()
+        if is_submitted and score == len(response["questions"]):
+            st.session_state["clear"] = False
+            quiz_form.balloons()
