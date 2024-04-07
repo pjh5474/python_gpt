@@ -193,7 +193,6 @@ def run_quiz_chain(_docs, topic, difficulty):
 
 score = 0
 is_submitted = False
-st.session_state["clear"] = None
 
 if not docs:
     st.markdown(
@@ -212,7 +211,7 @@ else:
         response = run_quiz_chain(docs, topic if topic else file.name, difficulty)
         quiz_form = st.form(
             "questions_form",
-            clear_on_submit=True if st.session_state["clear"] == True else False,
+            clear_on_submit=True if "clear" in st.session_state.keys() else False,
         )
         for question in response["questions"]:
             quiz_form.write(question["question"])
