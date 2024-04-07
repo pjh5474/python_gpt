@@ -209,9 +209,12 @@ else:
         st.info("Please input your OpenAI KEY")
     else:
         response = run_quiz_chain(docs, topic if topic else file.name, difficulty)
+        clear = False
+        if "clear" in st.session_state.keys():
+            clear = st.session_state["clear"]
         quiz_form = st.form(
             "questions_form",
-            clear_on_submit=True if "clear" in st.session_state.keys() else False,
+            clear_on_submit=clear,
         )
         for question in response["questions"]:
             quiz_form.write(question["question"])
