@@ -193,6 +193,7 @@ def run_quiz_chain(_docs, topic, difficulty):
 
 score = 0
 is_submitted = False
+st.session_state["clear"] = None
 
 if not docs:
     st.markdown(
