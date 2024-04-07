@@ -209,12 +209,8 @@ else:
         st.info("Please input your OpenAI KEY")
     else:
         response = run_quiz_chain(docs, topic if topic else file.name, difficulty)
-        clear = False
-        if "clear" in st.session_state.keys():
-            clear = st.session_state["clear"]
         quiz_form = st.form(
             "questions_form",
-            clear_on_submit=clear,
         )
         for question in response["questions"]:
             quiz_form.write(question["question"])
@@ -232,7 +228,6 @@ else:
                 is_submitted = True
 
         if is_submitted and score != len(response["questions"]):
-            st.session_state["clear"] = True
             quiz_form.form_submit_button("Retry")
         else:
             quiz_form.form_submit_button("Submit")
@@ -240,5 +235,4 @@ else:
             quiz_form.write(f"Your score : {score} / {len(response['questions'])}")
 
         if is_submitted and score == len(response["questions"]):
-            st.session_state["clear"] = False
             quiz_form.balloons()
