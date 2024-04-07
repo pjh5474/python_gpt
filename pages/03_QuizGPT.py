@@ -92,24 +92,26 @@ Based ONLY on the following context make minimum 3 to maximum 10 'DIFFERENT' que
 
 Each question should have 4 answers, three of them must be incorrect and on should be correct.
 
-Use (o) to signal the correct answer.
-
 There are three levels of difficulty for the quiz: easy, normal difficult.
 When you make a quiz, you have to make it at this difficulty level : {difficulty}.
 
 Question examples:
 
 Question: What is the color of the ocean?
-Answers: Red | Yellow | Green | Blue (o)
+Answers: Red | Yellow | Green | Blue
+Correct Answer : Blue
 
 Question: What is the capital of Georgia?
-Answers: Baku | Tbilisi (o) | Manila | Beirut
+Answers: Baku | Tbilisi | Manila | Beirut
+Correct Answer : Tbilisi
 
 Question: When was Avatar released?
-Answers: 2007 | 2001 | 2009 (o) | 1998
+Answers: 2007 | 2001 | 2009 | 1998
+Correct Answer : 2009
 
 Question: Who was Julius Caesar?
-Answers: A Roman Emperor (o) | Painter | Actor | Model
+Answers: A Roman Emperor | Painter | Actor | Model
+Correct Answer : A Roman Emperor
 
 Your turn!
 
