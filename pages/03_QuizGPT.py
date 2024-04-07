@@ -100,16 +100,16 @@ When you make a quiz, you have to make it at this difficulty level : {difficulty
 Question examples:
 
 Question: What is the color of the ocean?
-Answers: Red | Yellow | Green | Blue(o)
+Answers: Red | Yellow | Green | Blue (o)
 
 Question: What is the capital of Georgia?
-Answers: Baku | Tbilisi(o) | Manila | Beirut
+Answers: Baku | Tbilisi (o) | Manila | Beirut
 
 Question: When was Avatar released?
-Answers: 2007 | 2001 | 2009(o) | 1998
+Answers: 2007 | 2001 | 2009 (o) | 1998
 
 Question: Who was Julius Caesar?
-Answers: A Roman Emperor(o) | Painter | Actor | Model
+Answers: A Roman Emperor (o) | Painter | Actor | Model
 
 Your turn!
 
