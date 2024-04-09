@@ -280,6 +280,39 @@ def get_sitegpt_answer(question, url, keywords):
     return result.content.replace("$", "\$")
 
 
+similarity_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            """
+            There is CHAT_RECORD with user and ai.
+            If a user asks a question similar to one recorded in the CHAT_RECORD, retrieve the answer stored in the CHAT_RECORD.
+            Give sources (url) of the answers as they are, do not change them.
+
+            If you can't find a similar question in CHAT_RECORD, answer "NO_SIMILARITY". 
+
+            CHAT_RECORD: {history}
+            """,
+        ),
+        ("human", "{question}"),
+    ]
+)
+
+
+def find_similarity(question):
+    chat_record = "\n\n".join(
+        f"{chat['role']} : {chat['message']}" for chat in st.session_state["messages"]
+    )
+    chain = similarity_prompt | llm
+    response = chain.invoke(
+        {
+            "history": chat_record,
+            "question": question,
+        }
+    )
+    return response.content
+
+
 if "retriever" in st.session_state:
     if api_key:
         send_message(
@@ -292,12 +325,23 @@ if "retriever" in st.session_state:
 
         if user_input:
             send_message(user_input, "human")
-            with st.chat_message("ai"):
-                gpt_answer = get_sitegpt_answer(
-                    question=user_input, url=url, keywords=st.session_state["keywords"]
-                )
-                save_message(gpt_answer, "ai")
-                memory.save_context({"input": user_input}, {"output": gpt_answer})
+            prev_response = find_similarity(user_input)
+            if prev_response != "NO_SIMILARITY":
+                with st.chat_message("ai"):
+                    prev_response
+                    save_message(prev_response, "ai")
+                    memory.save_context(
+                        {"input": user_input}, {"output": prev_response}
+                    )
+            else:
+                with st.chat_message("ai"):
+                    gpt_answer = get_sitegpt_answer(
+                        question=user_input,
+                        url=url,
+                        keywords=st.session_state["keywords"],
+                    )
+                    save_message(gpt_answer, "ai")
+                    memory.save_context({"input": user_input}, {"output": gpt_answer})
     else:
         st.info("Please input your API KEY")
 else:
