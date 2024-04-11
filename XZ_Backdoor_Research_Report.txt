@@ -1,0 +1,28 @@
+Research Report: XZ Backdoor
+
+DuckDuckGo Search Results:
+In February of this year, Tan issued commits for versions 5.6.0 and 5.6.1 of XZ Utils. The updates implemented the backdoor. On March 28, 2024 a backdoor was identified in XZ Utils. This vulnerability, CVE-2024-3094 with a CVSS score of 10 is a result of a software supply chain compromise impacting versions 5.6.0 and 5.6.1 of XZ Utils.
+
+Wikipedia Search Results:
+On 29 March 2024, software developer Andres Freund reported that he had found a maliciously introduced backdoor in the Linux utility xz within the liblzma library in versions 5.6.0 and 5.6.1 released in February 2024. The backdoor gives an attacker remote code execution capabilities on the affected Linux system. The issue has been assigned a CVSS score of 10.0, the highest possible score.
+
+Background:
+Microsoft employee and PostgreSQL developer Andres Freund reported the backdoor after investigating a performance regression in Debian Sid. The backdoor alters the behavior of OpenSSH's SSH server daemon by abusing the systemd library, allowing the attacker to gain unauthorized access to the entire system remotely.
+
+Mechanism:
+The malicious code is present in versions 5.6.0 and 5.6.1 of the XZ Utils software package. The exploit remains dormant unless a specific third-party patch of the SSH server is used, enabling unauthorized access to the system.
+
+Features:
+XZ Utils is a set of free software command-line lossless data compressors, including lzma and xz, for Unix-like operating systems. It achieves higher compression rates than alternatives like gzip and bzip2.
+
+Usage:
+XZ Utils can compress and decompress the xz and lzma file formats. It is designed to work similarly to gzip and bzip2, compressing single files as input.
+
+Development and Adoption:
+Development of XZ Utils took place within the Tukaani Project, with source code released into the public domain. Various Linux distributions use xz for compressing software packages.
+
+The xz format:
+The xz format improves on lzma by allowing preprocessing filters, similar to those used in 7z.
+
+Conclusion:
+The XZ backdoor discovered in versions 5.6.0 and 5.6.1 of XZ Utils poses a significant security risk, allowing remote code execution and unauthorized access to affected systems.

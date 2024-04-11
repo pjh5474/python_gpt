@@ -31,6 +31,7 @@ comm==0.1.4
 confection==0.1.3
 contourpy==1.1.1
 cryptography==41.0.4
+curl-cffi==0.6.2
 cycler==0.11.0
 cymem==2.0.8
 dataclasses-json==0.5.14
@@ -38,7 +39,7 @@ debugpy==1.8.0
 decorator==5.1.1
 dill==0.3.7
 dnspython==2.4.2
-duckduckgo-search==3.8.5
+duckduckgo-search==5.3.0
 EbookLib==0.18
 effdet==0.4.1
 elastic-transport==8.4.0
@@ -121,7 +122,7 @@ onnxruntime==1.16.0
 openai==0.28.0
 opencv-python==4.8.0.76
 openpyxl==3.1.2
-orjson==3.9.9
+orjson==3.10.0
 overrides==7.4.0
 packaging==23.1
 pandas==2.1.0
