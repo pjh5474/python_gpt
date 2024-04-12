@@ -106,6 +106,11 @@ with st.sidebar:
         else:
             st.button("Make My AssistantAPI", on_click=make_assistant)
 
+    st.info("This page operates based on the below Github repository.")
+    st.link_button(
+        label="Github", url="https://github.com/pjh5474/python_gpt/tree/streamlit"
+    )
+
 
 if "thread_id" in st.session_state:
     send_message(
